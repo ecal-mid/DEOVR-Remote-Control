@@ -44,7 +44,7 @@ if (args.length == 2) {
     remotePortOsc = parseInt(args[1].split(':')[1]);
     remoteHostOsc = args[1].split(':')[0];
   } else {
-    remoteHostOsc = args[0];
+    remoteHostOsc = args[1];
   }
 }
 
