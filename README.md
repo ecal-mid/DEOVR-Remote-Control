@@ -1,7 +1,7 @@
 # DEOVR-Remote-Control
 
 Connect to [DEOVR player](https://deovr.com/) and control it via OSC.
-This Node app connects to the TCP socket of DEOVR.
+This Node app connects to the TCP socket of DEOVR. Tested with Node v21.6.1.
 
 ## How To Use
 
