@@ -19,24 +19,33 @@ import {
   Message as MessageOSC,
   Server as ServerOSC,
 } from 'node-osc';
-const remotePort = 8888;
-const localPort = 9999;
-var remoteHost = '127.0.0.1'; // computer IP
-const clientOsc = new ClientOSC(remoteHost, remotePort);
-const serverOsc = new ServerOSC(localPort, '0.0.0.0', () => {
-  console.log('OSC Server is listening on Port: ' + localPort);
+var remotePortOsc = 8888;
+const localPortOsc = 9999;
+var remoteHostOsc = '127.0.0.1'; // computer IP
+const clientOsc = new ClientOSC(remoteHostOsc, remotePortOsc);
+const serverOsc = new ServerOSC(localPortOsc, '0.0.0.0', () => {
+  console.log('OSC Server is listening on Port: ' + localPortOsc);
 });
 
 // get the IP of the headset and the IP of the computer from the command line parameters
 var args = process.argv.slice(2);
-if (args.length == 2) {
-  host = args[0]; // IP of the headset
-  remoteHost = args[1]; // IP of the computer
-} else {
+if (args.length == 0) {
   console.log(
-    'Usage: node deovr_tcp_client.js <ip of headset> <ip of target for OSC>'
+    'Usage: node deovr_tcp_client.js <ip of headset> <optional ip of target for OSC>'
   );
   process.exit(1);
+}
+if (args.length == 1) {
+  host = args[0]; // IP of the headset
+}
+if (args.length == 2) {
+  // check if the param contains a port
+  if (args[0].includes(':')) {
+    remotePortOsc = parseInt(args[0].split(':')[1]);
+    remoteHostOsc = args[0].split(':')[0];
+  } else {
+    remoteHostOsc = args[0];
+  }
 }
 
 console.log(`Connecting to TCP ${host}:${port}`);
