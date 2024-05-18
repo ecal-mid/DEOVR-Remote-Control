@@ -1,8 +1,8 @@
 // ECAL AB 2024
-// Connect to the TCP server of DEOVR app and get some remote control possibilities
+// Connect to the TCP socket of DEOVR app and get some remote control possibilities
 // This app allows to control the DEOVR app from a remote computer
 // An OSC bridge is available to send commands
-// In order to kepp the connection to DEOVR TCP socket it's required to send an empty message every seconds.
+// In order to keep the connection to DEOVR TCP socket it's required to send an empty message every seconds.
 // without doing that the TCP socket wiil be disconnected afeter 3 seconds.
 // Usage from terminal: node deovr_tcp_client.js <ip of headset> <ip of target for OSC>
 
@@ -40,9 +40,9 @@ if (args.length == 1) {
 }
 if (args.length == 2) {
   // check if the param contains a port
-  if (args[0].includes(':')) {
-    remotePortOsc = parseInt(args[0].split(':')[1]);
-    remoteHostOsc = args[0].split(':')[0];
+  if (args[1].includes(':')) {
+    remotePortOsc = parseInt(args[1].split(':')[1]);
+    remoteHostOsc = args[1].split(':')[0];
   } else {
     remoteHostOsc = args[0];
   }
@@ -51,7 +51,7 @@ if (args.length == 2) {
 console.log(`Connecting to TCP ${host}:${port}`);
 
 const client = net.createConnection(port, host, () => {
-  console.log('TCP Connected to headset');
+  console.log('TCP Connected to headset ' + host);
   // Send an empty message every second
   setInterval(() => {
     client.write(Buffer.alloc(4));
@@ -65,7 +65,7 @@ client.on('data', (data) => {
     // remove the first 4 bytes to get a valid json
     data.toString().substring(data.toString().indexOf('{'))
   );
-  sendOscMessage('/chataigne', [json.currentTime, json.playerState]);
+  sendOscMessage('/deovr/playerstate', [json.currentTime, json.playerState]);
   console.log(json);
 });
 
@@ -118,7 +118,7 @@ function sendOscMessage(address, args) {
 }
 // function to receive OSC messages
 serverOsc.on('message', function (msg) {
-  console.log(`Message: ${msg}`);
+  console.log(`Incomming OSC Message: ${msg}`);
 
   // OSC message to control the DEOVR app
   if (msg[0] == '/deovr/play') {
