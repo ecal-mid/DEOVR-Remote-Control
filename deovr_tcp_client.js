@@ -1,3 +1,4 @@
+// V.0.2
 // ECAL AB 2024
 // Connect to the TCP socket of DEOVR app and get some remote control possibilities
 // This app allows to control the DEOVR app from a remote computer
@@ -8,10 +9,11 @@
 
 // TCP client to connect to DEOVR server
 import net from 'net';
-var host = '127.0.0.1'; // IP of headset running DEOVR (set in the command line parameters)
-const port = 23554; // port of DEOVR
+var hostTCP = '127.0.0.1'; // IP of headset running DEOVR (set in the command line parameters)
+const portTCP = 23554; // port of DEOVR
 var retry = 3;
 var retryCount = 0;
+var heartbeatInterval = null;
 
 // OSC to send messages to/from chataigne or Arduino or other devices
 import {
@@ -36,7 +38,7 @@ if (args.length == 0) {
   process.exit(1);
 }
 if (args.length == 1) {
-  host = args[0]; // IP of the headset
+  hostTCP = args[0]; // IP of the headset
 }
 if (args.length == 2) {
   // check if the param contains a port
@@ -48,15 +50,21 @@ if (args.length == 2) {
   }
 }
 
-console.log(`Connecting to TCP ${host}:${port}`);
+console.log(`Connecting to TCP ${hostTCP}:${portTCP}`);
 
-const client = net.createConnection(port, host, () => {
-  console.log('TCP Connected to headset ' + host);
-  // Send an empty message every second
-  setInterval(() => {
+const client = net.createConnection(portTCP, hostTCP, () => {
+  console.log('TCP Connected to headset ' + hostTCP);
+});
+
+// function to keep the connection alive
+// send an empty message every second
+function startKeepAlive() {
+  clearInterval(heartbeatInterval);
+  // Send an empty message every second to keep the connection alive
+  heartbeatInterval = setInterval(() => {
     client.write(Buffer.alloc(4));
   }, 1000);
-});
+}
 
 client.on('data', (data) => {
   //console.log(`Received: ${data}`);
@@ -69,25 +77,32 @@ client.on('data', (data) => {
   console.log(json);
 });
 
+client.on('connect', () => {
+  console.log('Connected to DEOVR');
+  startKeepAlive();
+});
+
 client.on('error', (error) => {
   console.log(`Error: ${error.message}`);
   // try to reconnect
   if (retryCount < retry) {
     retryCount++;
     console.log(`Retrying... ${retryCount}`);
-    client.connect(port, host);
+    client.connect(portTCP, hostTCP);
   } else {
     console.log('Max retries reached');
-    client.end();
+    clearInterval(heartbeatInterval);
+    //client.end();
     // kill the process
-    process.exit(1);
+    //process.exit(1);
   }
 });
 
 client.on('close', () => {
   console.log('Connection closed');
-  clientOsc.close();
-  serverOsc.close();
+  clearInterval(heartbeatInterval);
+  //clientOsc.close();
+  //serverOsc.close();
 });
 
 // function to send a message to the server
@@ -140,5 +155,10 @@ serverOsc.on('message', function (msg) {
     // go to a specific time in the currently active video and pause (time in seconds, float)
     // send 0.0 as time to pause at the beginning
     sendMessage({ playerState: 1, currentTime: msg[1] });
+  }
+  if (msg[0] == '/deovr/reconnect/tcp') {
+    // try to reconnect to the DEOVR app
+    retryCount = 0;
+    client.connect(portTCP, hostTCP);
   }
 });
