@@ -39,9 +39,9 @@ Please refer to the [DEOVR Remote Control documentation](https://deovr.com/app/d
 
 Port: `9999`
 
-- `deovr/play`: Start playing the active video.
-- `deovr/pause`: Pause the active video.
-- `deovr/seek/play <time in seconds as float>`: Seek to a specific time in the video and play (put 0.0 to start from the beggining).
-- `deovr/seek/pause <time in seconds as float>`: Seek to a specific time in the video and pause.
+- `/deovr/play`: Start playing the active video.
+- `/deovr/pause`: Pause the active video.
+- `/deovr/seek/play <time in seconds as float>`: Seek to a specific time in the video and play (put 0.0 to start from the beggining).
+- `/deovr/seek/pause <time in seconds as float>`: Seek to a specific time in the video and pause.
 - `/deovr/load/path <path to video as string>`: Load a video file from the device.
 - `/deovr/reconnect/tcp`: try to reconnect to TCP socket on the Headset.
