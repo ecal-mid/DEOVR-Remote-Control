@@ -21,6 +21,7 @@ import {
   Message as MessageOSC,
   Server as ServerOSC,
 } from 'node-osc';
+import path from 'path';
 var remotePortOsc = 8888;
 const localPortOsc = 9999;
 var remoteHostOsc = '127.0.0.1'; // computer IP
@@ -68,11 +69,24 @@ function startKeepAlive() {
 
 client.on('data', (data) => {
   //console.log(`Received: ${data}`);
-  // decode json
-  const json = JSON.parse(
-    // remove the first 4 bytes to get a valid json
-    data.toString().substring(data.toString().indexOf('{'))
-  );
+  // remove the first 4 bytes to get a valid json string
+  if (data.toString() == '' || data == null || data.toString().length < 4) {
+    console.log('Invalid data recieved from DEOVR');
+    sendOscMessage('/deovr/playerstate', [0.0, -1]);
+    return;
+  }
+  const json_string = data.toString().substring(data.toString().indexOf('{'));
+  // check if the string is a valid json
+  try {
+    JSON.parse(json_string);
+  } catch (e) {
+    console.log(
+      'Invalid JSON recieved from DEOVR (probably no video file open)'
+    );
+    sendOscMessage('/deovr/playerstate', [0.0, -1]);
+    return;
+  }
+  const json = JSON.parse(json_string);
   sendOscMessage('/deovr/playerstate', [json.currentTime, json.playerState]);
   console.log(json);
 });
@@ -141,21 +155,31 @@ serverOsc.on('message', function (msg) {
     // playerState = 0 (play), 1 (pause)
     sendMessage({ playerState: 0 });
   }
+
   if (msg[0] == '/deovr/pause') {
     // pause the currently active video
     // playerState = 0 (play), 1 (pause)
     sendMessage({ playerState: 1 });
   }
+
   if (msg[0] == '/deovr/seek/play') {
     // go to a specific time in the currently active video and play (time in seconds, float)
     // send 0.0 as time to play from the beginning
     sendMessage({ playerState: 0, currentTime: msg[1] });
   }
+
   if (msg[0] == '/deovr/seek/pause') {
     // go to a specific time in the currently active video and pause (time in seconds, float)
     // send 0.0 as time to pause at the beginning
     sendMessage({ playerState: 1, currentTime: msg[1] });
   }
+
+  if (msg[0] == '/deovr/load/path') {
+    // load a video from a specific path (path to the video)
+    // play the video after loading, if you want to load the video without playing it, use the /deovr/seek/pause command with 0.0 as time
+    sendMessage({ path: msg[1] });
+  }
+
   if (msg[0] == '/deovr/reconnect/tcp') {
     // try to reconnect to the DEOVR app
     retryCount = 0;

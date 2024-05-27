@@ -34,6 +34,7 @@ This Node app connects to the TCP socket of DEOVR. Tested with Node v21.6.1.
 
 Please refer to the [DEOVR Remote Control documentation](https://deovr.com/app/doc#remote-control) for more detailed information.
 
+**Please note that remote control is only available if DEOVR app is open on the headset and a video file is open as well (won't work if you are in the dashboard of DEOVR)** 
 ## OSC Commands
 
 Port: `9999`
@@ -42,3 +43,5 @@ Port: `9999`
 - `deovr/pause`: Pause the active video.
 - `deovr/seek/play <time in seconds as float>`: Seek to a specific time in the video and play (put 0.0 to start from the beggining).
 - `deovr/seek/pause <time in seconds as float>`: Seek to a specific time in the video and pause.
+- `/deovr/load/path <path to video as string>`: Load a video file from the device.
+- `/deovr/reconnect/tcp`: try to reconnect to TCP socket on the Headset.
