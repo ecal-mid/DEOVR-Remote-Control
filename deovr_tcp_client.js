@@ -83,12 +83,23 @@ client.on('data', (data) => {
     console.log(
       'Invalid JSON recieved from DEOVR (probably no video file open)'
     );
-    sendOscMessage('/deovr/playerstate', [0.0, -1]);
+    sendOscMessage('/deovr/playerstate', [-1]);
     return;
   }
   const json = JSON.parse(json_string);
-  sendOscMessage('/deovr/playerstate', [json.currentTime, json.playerState]);
-  console.log(json);
+  // use try catch to avoid crash if the json values are null
+  try {
+    sendOscMessage('/deovr/playerstate', [
+      json.path,
+      json.duration,
+      json.currentTime,
+      json.playerState,
+    ]);
+    console.log(json);
+  } catch (e) {
+    console.log('Invalid values recieved from DEOVR ');
+    return;
+  }
 });
 
 client.on('connect', () => {
